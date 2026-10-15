@@ -1,0 +1,160 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#26352d">
+  <title>Mineral Scout</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --green: #26352d;
+      --paper: #f6f5f0;
+      --line: #deded5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: #292d29;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    header {
+      background: var(--green);
+      color: white;
+      padding: 26px 20px 22px;
+    }
+    header h1 {
+      margin: 0;
+      font-family: Georgia, serif;
+      font-size: 28px;
+      letter-spacing: .04em;
+    }
+    header p { margin: 8px 0 0; color: #d5ddd5; font-size: 13px; }
+    main { max-width: 760px; margin: auto; padding: 20px 16px 48px; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    input, select, button {
+      font: inherit;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 11px;
+      background: white;
+      min-width: 0;
+    }
+    input { flex: 1; width: 50%; }
+    button { cursor: pointer; }
+    #status { font-size: 12px; color: #686d67; margin: 0 0 14px; }
+    .item {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+    .site { font-size: 12px; color: #627464; margin-bottom: 7px; }
+    .item h2 { font-size: 16px; line-height: 1.5; margin: 0 0 12px; }
+    .item a { color: var(--green); font-weight: 600; text-decoration: none; }
+    .empty {
+      padding: 32px 16px;
+      text-align: center;
+      color: #747970;
+      background: white;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      line-height: 1.8;
+    }
+    footer { text-align: center; color: #858980; font-size: 11px; padding: 24px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Mineral Scout</h1>
+    <p>鉱物標本の新着を見つける</p>
+  </header>
+  <main>
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="標本名・販売店で検索">
+      <button id="refresh">更新</button>
+    </div>
+    <div class="toolbar">
+      <select id="sort" aria-label="表示順">
+        <option value="new">新着順</option>
+        <option value="site">販売店順</option>
+      </select>
+    </div>
+    <p id="status">読み込み中...</p>
+    <section id="items"></section>
+  </main>
+  <footer>Mineral Scout · 販売情報は各販売元で確認してください</footer>
+
+  <script>
+    const dataUrl = "./data/latest.json";
+    let allItems = [];
+
+    async function loadItems() {
+      const status = document.getElementById("status");
+      status.textContent = "データを読み込み中...";
+      try {
+        const response = await fetch(dataUrl + "?t=" + Date.now());
+        if (!response.ok) throw new Error("データを取得できません");
+        const data = await response.json();
+        allItems = Array.isArray(data.items) ? data.items : [];
+        render();
+        const updated = data.updated
+          ? new Date(data.updated).toLocaleString("ja-JP")
+          : "未更新";
+        status.textContent = `${allItems.length}件 · 最終更新 ${updated}`;
+      } catch (error) {
+        status.textContent = "データを読み込めません。公開設定と巡回処理を確認してください。";
+        document.getElementById("items").innerHTML =
+          '<div class="empty">まだデータを取得できません。<br>巡回設定が完了すると、ここに標本が表示されます。</div>';
+      }
+    }
+
+    function render() {
+      const query = document.getElementById("search").value.toLowerCase();
+      const sort = document.getElementById("sort").value;
+      const filtered = allItems.filter(item =>
+        `${item.title || ""} ${item.site || ""}`.toLowerCase().includes(query)
+      );
+      if (sort === "site") filtered.sort((a, b) =>
+        (a.site || "").localeCompare(b.site || "")
+      );
+      const container = document.getElementById("items");
+      container.replaceChildren();
+
+      if (!filtered.length) {
+        container.innerHTML = '<div class="empty">該当する標本はありません。</div>';
+        return;
+      }
+
+      filtered.forEach(item => {
+        const card = document.createElement("article");
+        card.className = "item";
+        const site = document.createElement("div");
+        site.className = "site";
+        site.textContent = item.site || "販売情報";
+        const title = document.createElement("h2");
+        title.textContent = item.title || "名称不明";
+        const link = document.createElement("a");
+        link.href = item.url || "#";
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "販売ページを開く ↗";
+        card.append(site, title, link);
+        container.appendChild(card);
+      });
+    }
+
+    document.getElementById("search").addEventListener("input", render);
+    document.getElementById("sort").addEventListener("change", render);
+    document.getElementById("refresh").addEventListener("click", loadItems);
+    loadItems();
+  </script>
+</body>
+</html>
