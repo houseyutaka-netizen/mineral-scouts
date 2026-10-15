@@ -1,5 +1,6 @@
 sites:
-  - name: "Example RSS"
-    type: "rss"
-    url: "https://example.com/feed.xml"
-    enabled: false
+  - name: "AMF"
+    type: "html"
+    url: "https://www.amf7.com/indexm.html"
+    selector: ".item a[href]"
+    enabled: true
