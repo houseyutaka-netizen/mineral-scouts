@@ -10,3 +10,9 @@ sites:
     url: "https://crystalclassics.com/collections/complete-online-inventory?sort_by=created-descending"
     selector: 'a[id^="CardLink-"][href*="/products/"]'
     enabled: true
+
+  - name: "PEANUTS MINERALS"
+    type: "html"
+    url: "https://www.peanutsminerals.com/"
+    selector: 'a[href*="/items/"]'
+    enabled: true
