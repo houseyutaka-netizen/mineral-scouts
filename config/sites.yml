@@ -1,0 +1,5 @@
+sites:
+  - name: "Example RSS"
+    type: "rss"
+    url: "https://example.com/feed.xml"
+    enabled: false
