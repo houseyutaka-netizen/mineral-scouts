@@ -1,4 +1,3 @@
-scripts/scan.py
 import json
 import os
 import hashlib
