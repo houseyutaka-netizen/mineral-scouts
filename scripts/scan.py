@@ -49,11 +49,19 @@ def fetch_items(site):
                 "date": entry.get("published", ""),
             })
     else:
-        soup = BeautifulSoup(response.text, "html.parser")
+        soup = BeautifulSoup(response.content, "html.parser")
         selector = site.get("selector", "a")
         for tag in soup.select(selector):
             link = tag.get("href")
-            title = tag.get_text(" ", strip=True)
+              title = tag.get_text(" ", strip=True)
+            if not title:
+                card = tag.find_parent(class_="item")
+                if card:
+                    title = card.get_text(" ", strip=True)
+                else:
+                    img = tag.find("img")
+                    if img:
+                        title = img.get("alt", "").strip()
             if link and title:
                 items.append({
                     "title": title,
