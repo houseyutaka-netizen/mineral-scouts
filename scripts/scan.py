@@ -53,7 +53,8 @@ def fetch_items(site):
         selector = site.get("selector", "a")
         for tag in soup.select(selector):
             link = tag.get("href")
-              title = tag.get_text(" ", strip=True)
+            title = tag.get_text(" ", strip=True)
+
             if not title:
                 card = tag.find_parent(class_="item")
                 if card:
@@ -62,6 +63,7 @@ def fetch_items(site):
                     img = tag.find("img")
                     if img:
                         title = img.get("alt", "").strip()
+
             if link and title:
                 items.append({
                     "title": title,
