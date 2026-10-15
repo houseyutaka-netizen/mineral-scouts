@@ -4,3 +4,9 @@ sites:
     url: "https://www.amf7.com/indexm.html"
     selector: ".item a[href]"
     enabled: true
+
+  - name: "Crystal Classics"
+    type: "html"
+    url: "https://crystalclassics.com/collections/complete-online-inventory?sort_by=created-descending"
+    selector: 'a[id^="CardLink-"][href*="/products/"]'
+    enabled: true
