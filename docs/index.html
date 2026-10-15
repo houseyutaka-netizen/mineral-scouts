@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -23,20 +22,27 @@
     header {
       background: var(--green);
       color: white;
-      padding: 26px 20px 22px;
+      padding: 26px 20px;
     }
     header h1 {
       margin: 0;
       font-family: Georgia, serif;
       font-size: 28px;
-      letter-spacing: .04em;
     }
-    header p { margin: 8px 0 0; color: #d5ddd5; font-size: 13px; }
-    main { max-width: 760px; margin: auto; padding: 20px 16px 48px; }
+    header p {
+      margin: 8px 0 0;
+      color: #d5ddd5;
+      font-size: 13px;
+    }
+    main {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px 16px 48px;
+    }
     .toolbar {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     input, select, button {
       font: inherit;
@@ -48,18 +54,54 @@
     }
     input { flex: 1; width: 50%; }
     button { cursor: pointer; }
-    #status { font-size: 12px; color: #686d67; margin: 0 0 14px; }
+    #status {
+      font-size: 12px;
+      color: #686d67;
+      line-height: 1.7;
+    }
+    #items {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
     .item {
       background: white;
       border: 1px solid var(--line);
       border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 10px;
+      overflow: hidden;
+      min-width: 0;
     }
-    .site { font-size: 12px; color: #627464; margin-bottom: 7px; }
-    .item h2 { font-size: 16px; line-height: 1.5; margin: 0 0 12px; }
-    .item a { color: var(--green); font-weight: 600; text-decoration: none; }
+    .thumbnail {
+      display: block;
+      background: #eee;
+      aspect-ratio: 1;
+    }
+    .thumbnail img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .details { padding: 14px; }
+    .site {
+      font-size: 12px;
+      color: #627464;
+      margin-bottom: 7px;
+    }
+    .item h2 {
+      font-size: 15px;
+      line-height: 1.6;
+      margin: 0 0 12px;
+      overflow-wrap: anywhere;
+    }
+    .item a {
+      color: var(--green);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .product-link { font-size: 13px; }
     .empty {
+      grid-column: 1 / -1;
       padding: 32px 16px;
       text-align: center;
       color: #747970;
@@ -68,7 +110,18 @@
       border-radius: 12px;
       line-height: 1.8;
     }
-    footer { text-align: center; color: #858980; font-size: 11px; padding: 24px; }
+    footer {
+      text-align: center;
+      color: #858980;
+      font-size: 11px;
+      padding: 24px;
+    }
+    @media (max-width: 700px) {
+      #items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 380px) {
+      #items { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -76,84 +129,170 @@
     <h1>Mineral Scout</h1>
     <p>鉱物標本の新着を見つける</p>
   </header>
+
   <main>
     <div class="toolbar">
-      <input id="search" type="search" placeholder="標本名・販売店で検索">
+      <input id="search" type="search"
+        aria-label="標本名・販売店で検索"
+        placeholder="標本名・販売店で検索">
       <button id="refresh">更新</button>
     </div>
     <div class="toolbar">
       <select id="sort" aria-label="表示順">
-        <option value="new">新着順</option>
+        <option value="source">取得順</option>
         <option value="site">販売店順</option>
       </select>
     </div>
-    <p id="status">読み込み中...</p>
+    <p id="status" aria-live="polite">読み込み中...</p>
     <section id="items"></section>
   </main>
-  <footer>Mineral Scout · 販売情報は各販売元で確認してください</footer>
+
+  <footer>
+    Mineral Scout · 画像・販売情報は各販売元で確認してください
+  </footer>
 
   <script>
-    const dataUrl = "./data/latest.json";
     let allItems = [];
+    let updated = "未更新";
+
+    function safeUrl(value) {
+      if (!value) return "";
+      try {
+        const url = new URL(value, location.href);
+        return ["https:", "http:"].includes(url.protocol)
+          ? url.href : "";
+      } catch {
+        return "";
+      }
+    }
+
+    function makeLink(url) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      return link;
+    }
+
+    function showEmpty(message) {
+      const container = document.getElementById("items");
+      const box = document.createElement("div");
+      box.className = "empty";
+      box.textContent = message;
+      container.replaceChildren(box);
+    }
 
     async function loadItems() {
       const status = document.getElementById("status");
+      const button = document.getElementById("refresh");
+      button.disabled = true;
       status.textContent = "データを読み込み中...";
+
       try {
-        const response = await fetch(dataUrl + "?t=" + Date.now());
-        if (!response.ok) throw new Error("データを取得できません");
+        const response = await fetch(
+          "./data/latest.json?t=" + Date.now(),
+          { cache: "no-store" }
+        );
+        if (!response.ok) throw new Error("取得失敗");
+
         const data = await response.json();
         allItems = Array.isArray(data.items) ? data.items : [];
-        render();
-        const updated = data.updated
+        updated = data.updated
           ? new Date(data.updated).toLocaleString("ja-JP")
           : "未更新";
-        status.textContent = `${allItems.length}件 · 最終更新 ${updated}`;
-      } catch (error) {
-        status.textContent = "データを読み込めません。公開設定と巡回処理を確認してください。";
-        document.getElementById("items").innerHTML =
-          '<div class="empty">まだデータを取得できません。<br>巡回設定が完了すると、ここに標本が表示されます。</div>';
+        render();
+      } catch {
+        status.textContent = "データを読み込めませんでした。";
+        showEmpty("時間を置いて「更新」を押してください。");
+      } finally {
+        button.disabled = false;
       }
     }
 
     function render() {
-      const query = document.getElementById("search").value.toLowerCase();
-      const sort = document.getElementById("sort").value;
+      const query = document.getElementById("search")
+        .value.trim().toLowerCase();
       const filtered = allItems.filter(item =>
-        `${item.title || ""} ${item.site || ""}`.toLowerCase().includes(query)
+        `${item.title || ""} ${item.site || ""}`
+          .toLowerCase().includes(query)
       );
-      if (sort === "site") filtered.sort((a, b) =>
-        (a.site || "").localeCompare(b.site || "")
-      );
+
+      if (document.getElementById("sort").value === "site") {
+        filtered.sort((a, b) =>
+          (a.site || "").localeCompare(b.site || "", "ja")
+        );
+      }
+
+      document.getElementById("status").textContent =
+        `表示 ${filtered.length}件 / 全${allItems.length}件` +
+        ` · 最終更新 ${updated}`;
+
       const container = document.getElementById("items");
       container.replaceChildren();
 
       if (!filtered.length) {
-        container.innerHTML = '<div class="empty">該当する標本はありません。</div>';
+        showEmpty("該当する標本はありません。");
         return;
       }
+
+      const fragment = document.createDocumentFragment();
 
       filtered.forEach(item => {
         const card = document.createElement("article");
         card.className = "item";
+
+        const productUrl = safeUrl(item.url);
+        const imageUrl = safeUrl(item.image);
+
+        if (imageUrl) {
+          const thumbnail = productUrl
+            ? makeLink(productUrl)
+            : document.createElement("div");
+          thumbnail.className = "thumbnail";
+
+          const img = document.createElement("img");
+          img.src = imageUrl;
+          img.alt = item.title || "鉱物標本";
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.addEventListener("error", () => thumbnail.remove());
+          thumbnail.appendChild(img);
+          card.appendChild(thumbnail);
+        }
+
+        const details = document.createElement("div");
+        details.className = "details";
+
         const site = document.createElement("div");
         site.className = "site";
         site.textContent = item.site || "販売情報";
+
         const title = document.createElement("h2");
         title.textContent = item.title || "名称不明";
-        const link = document.createElement("a");
-        link.href = item.url || "#";
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-        link.textContent = "販売ページを開く ↗";
-        card.append(site, title, link);
-        container.appendChild(card);
+
+        details.append(site, title);
+
+        if (productUrl) {
+          const link = makeLink(productUrl);
+          link.className = "product-link";
+          link.textContent = "販売ページを開く ↗";
+          details.appendChild(link);
+        }
+
+        card.appendChild(details);
+        fragment.appendChild(card);
       });
+
+      container.appendChild(fragment);
     }
 
-    document.getElementById("search").addEventListener("input", render);
-    document.getElementById("sort").addEventListener("change", render);
-    document.getElementById("refresh").addEventListener("click", loadItems);
+    document.getElementById("search")
+      .addEventListener("input", render);
+    document.getElementById("sort")
+      .addEventListener("change", render);
+    document.getElementById("refresh")
+      .addEventListener("click", loadItems);
+
     loadItems();
   </script>
 </body>
