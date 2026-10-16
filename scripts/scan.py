@@ -116,6 +116,18 @@ def detect_status(card, site_url):
         return "available"
 
     host = urlparse(site_url).hostname or ""
+    
+        if host in {"fineartminerals.com", "www.fineartminerals.com"}:
+        classes = set(card.get("class", []))
+        if "outofstock" in classes:
+            return "sold_out"
+        if "onhold" in classes or "on-hold" in classes:
+            return "unknown"
+        if re.search(r"\bsold\b", text, re.I):
+            return "sold_out"
+        if "instock" in classes:
+            return "available"
+        return "unknown"
 
     # AMFは商品枠の見出しが鉱物名、売切れ時はSOLD OUTになる形式。
     if host in {"amf7.com", "www.amf7.com"}:
