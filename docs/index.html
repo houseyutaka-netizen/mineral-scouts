@@ -1,414 +1,102 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#26352d">
-  <title>Mineral Scout</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --green: #26352d;
-      --paper: #f6f5f0;
-      --line: #deded5;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--paper);
-      color: #292d29;
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-    header {
-      background: var(--green);
-      color: white;
-      padding: 26px 20px;
-    }
-    header h1 {
-      margin: 0;
-      font-family: Georgia, serif;
-      font-size: 28px;
-    }
-    header p {
-      margin: 8px 0 0;
-      color: #d5ddd5;
-      font-size: 13px;
-    }
-    main {
-      max-width: 1000px;
-      margin: auto;
-      padding: 20px 16px 48px;
-    }
-    .toolbar {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    input, select, button {
-      font: inherit;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      padding: 11px;
-      background: white;
-      min-width: 0;
-    }
-    input { flex: 1; width: 50%; }
-    button { cursor: pointer; }
-    .filters {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-    }
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 12px;
-      color: #627464;
-    }
-    label select { width: 100%; color: #292d29; }
-    #status, .note {
-      font-size: 12px;
-      color: #686d67;
-      line-height: 1.7;
-    }
-    #warning {
-      color: #8d5419;
-      font-size: 12px;
-      line-height: 1.7;
-    }
-    #items {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-    }
-    .item {
-      background: white;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      overflow: hidden;
-      min-width: 0;
-    }
-    .thumbnail {
-      display: block;
-      background: #eee;
-      aspect-ratio: 1;
-    }
-    .thumbnail img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-    .details { padding: 14px; }
-    .site {
-      font-size: 12px;
-      color: #627464;
-      margin-bottom: 8px;
-    }
-    .badge {
-      display: inline-block;
-      font-size: 11px;
-      border-radius: 5px;
-      padding: 4px 7px;
-      margin-bottom: 10px;
-    }
-    .available { background: #e5f2e8; color: #285f37; }
-    .sold_out { background: #f4e5e5; color: #934343; }
-    .unknown { background: #f4eedf; color: #7b642f; }
-    .item h2 {
-      font-size: 15px;
-      line-height: 1.6;
-      margin: 0 0 12px;
-      overflow-wrap: anywhere;
-    }
-    .item a {
-      color: var(--green);
-      font-weight: 600;
-      text-decoration: none;
-    }
-    .product-link { font-size: 13px; }
-    .empty {
-      grid-column: 1 / -1;
-      padding: 32px 16px;
-      text-align: center;
-      color: #747970;
-      background: white;
-      border: 1px dashed var(--line);
-      border-radius: 12px;
-      line-height: 1.8;
-    }
-    footer {
-      text-align: center;
-      color: #858980;
-      font-size: 11px;
-      padding: 24px;
-    }
-    @media (max-width: 700px) {
-      #items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 380px) {
-      #items { grid-template-columns: 1fr; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#26352d">
+<title>Mineral Scout</title>
+<style>
+:root{color-scheme:light;--green:#26352d;--paper:#f6f5f0;--line:#deded5}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:#292d29;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+header{background:var(--green);color:white;padding:26px 20px}header h1{margin:0;font-family:Georgia,serif;font-size:28px}header p{margin:8px 0 0;color:#d5ddd5;font-size:13px}
+main{max-width:1000px;margin:auto;padding:20px 16px 48px}.toolbar{display:flex;gap:8px;margin-bottom:12px}
+input,select,button{font:inherit;border:1px solid var(--line);border-radius:9px;padding:11px;background:white;min-width:0}input{flex:1;width:50%}button{cursor:pointer}
+.filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:#627464}label select{width:100%;color:#292d29}
+#status,.note{font-size:12px;color:#686d67;line-height:1.7}#warning{color:#8d5419;font-size:12px;line-height:1.7}
+#items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.item{background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:0}
+.thumbnail{display:block;background:#eee;aspect-ratio:1}.thumbnail img{display:block;width:100%;height:100%;object-fit:contain}.details{padding:14px}.site{font-size:12px;color:#627464;margin-bottom:8px}
+.badge{display:inline-block;font-size:11px;border-radius:5px;padding:4px 7px;margin-bottom:10px}.available{background:#e5f2e8;color:#285f37}.sold_out{background:#f4e5e5;color:#934343}.unknown{background:#f4eedf;color:#7b642f}
+.item h2{font-size:15px;line-height:1.6;margin:0 0 12px;overflow-wrap:anywhere}.item a{color:var(--green);font-weight:600;text-decoration:none}.product-link{font-size:13px}
+.price{font-size:21px;font-weight:700;line-height:1.5;margin:0 0 5px;color:var(--green);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}.price.unconfirmed{font-size:14px;color:#777;font-weight:400}.price-note{font-size:11px;color:#777;line-height:1.6;margin:0 0 14px}
+.empty{grid-column:1/-1;padding:32px 16px;text-align:center;color:#747970;background:white;border:1px dashed var(--line);border-radius:12px;line-height:1.8}footer{text-align:center;color:#858980;font-size:11px;padding:24px}
+@media(max-width:700px){#items{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:380px){#items{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Mineral Scout</h1>
-    <p>鉱物標本の新着を見つける</p>
-  </header>
-
-  <main>
-    <div class="toolbar">
-      <input id="search" type="search"
-        aria-label="標本名・販売店で検索"
-        placeholder="標本名・販売店で検索">
-      <button id="refresh">更新</button>
-    </div>
-
-    <div class="filters">
-      <label>
-        販売状況
-        <select id="availability">
-          <option value="available">販売中</option>
-          <option value="sold_out">SOLD OUT</option>
-          <option value="all">すべて</option>
-          <option value="unknown">状況未確認</option>
-        </select>
-      </label>
-      <label>
-        販売店
-        <select id="shop">
-          <option value="">すべての販売店</option>
-        </select>
-      </label>
-      <label>
-        表示順
-        <select id="sort">
-          <option value="source">取得順</option>
-          <option value="site">販売店順</option>
-        </select>
-      </label>
-    </div>
-
-    <p class="note">
-      販売状況は巡回時の商品一覧から判定しています。
-      最新の在庫は販売ページでご確認ください。
-    </p>
-    <p id="status" aria-live="polite">読み込み中...</p>
-    <p id="warning" role="status"></p>
-    <section id="items"></section>
-  </main>
-
-  <footer>
-    Mineral Scout · 画像・販売情報は各販売元で確認してください
-  </footer>
-
-  <script>
-    let allItems = [];
-    let updated = "未更新";
-    let errors = [];
-    const labels = {
-      available: "販売中",
-      sold_out: "SOLD OUT",
-      unknown: "状況未確認"
-    };
-
-    function availabilityOf(item) {
-      return Object.hasOwn(labels, item.availability)
-        ? item.availability : "unknown";
-    }
-
-    function safeUrl(value) {
-      if (!value) return "";
-      try {
-        const url = new URL(value, location.href);
-        return ["https:", "http:"].includes(url.protocol)
-          ? url.href : "";
-      } catch {
-        return "";
-      }
-    }
-
-    function makeLink(url) {
-      const link = document.createElement("a");
-      link.href = url;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      return link;
-    }
-
-    function showEmpty(message) {
-      const box = document.createElement("div");
-      box.className = "empty";
-      box.textContent = message;
-      document.getElementById("items").replaceChildren(box);
-    }
-
-    function updateShops() {
-      const select = document.getElementById("shop");
-      const previous = select.value;
-      const shops = [...new Set(
-        allItems.map(item => item.site).filter(Boolean)
-      )].sort((a, b) => a.localeCompare(b, "ja"));
-
-      select.replaceChildren(new Option("すべての販売店", ""));
-      shops.forEach(shop => select.add(new Option(shop, shop)));
-      select.value = shops.includes(previous) ? previous : "";
-    }
-
-    async function loadItems() {
-      const status = document.getElementById("status");
-      const button = document.getElementById("refresh");
-      button.disabled = true;
-      status.textContent = "データを読み込み中...";
-
-      try {
-        const response = await fetch(
-          "./data/latest.json?t=" + Date.now(),
-          { cache: "no-store" }
-        );
-        if (!response.ok) throw new Error("取得失敗");
-        const data = await response.json();
-
-        allItems = Array.isArray(data.items) ? data.items : [];
-        errors = Array.isArray(data.errors) ? data.errors : [];
-        updated = data.updated
-          ? new Date(data.updated).toLocaleString("ja-JP")
-          : "未更新";
-
-        updateShops();
-        render();
-      } catch {
-        status.textContent = "データを読み込めませんでした。";
-        document.getElementById("warning").textContent = "";
-        showEmpty("時間を置いて「更新」を押してください。");
-      } finally {
-        button.disabled = false;
-      }
-    }
-
-    function render() {
-      const query = document.getElementById("search")
-        .value.trim().toLowerCase();
-      const shop = document.getElementById("shop").value;
-      const selected = document.getElementById("availability").value;
-
-      const matching = allItems.filter(item =>
-        (!shop || item.site === shop) &&
-        `${item.title || ""} ${item.site || ""}`
-          .toLowerCase().includes(query)
-      );
-
-      const counts = { available: 0, sold_out: 0, unknown: 0 };
-      matching.forEach(item => counts[availabilityOf(item)]++);
-
-      const filtered = matching.filter(item =>
-        selected === "all" || availabilityOf(item) === selected
-      );
-
-      if (document.getElementById("sort").value === "site") {
-        filtered.sort((a, b) =>
-          (a.site || "").localeCompare(b.site || "", "ja")
-        );
-      }
-
-      document.getElementById("status").textContent =
-        `表示 ${filtered.length}件 · ` +
-        `販売中 ${counts.available} / SOLD OUT ${counts.sold_out}` +
-        ` / 未確認 ${counts.unknown} · 最終更新 ${updated}`;
-
-      const messages = [];
-      if (errors.length) {
-        messages.push(
-          `今回取得できなかった販売店：${errors.join("、")}。` +
-          "前回の商品は「状況未確認」で表示します。"
-        );
-      }
-      if (allItems.some(item => !item.availability)) {
-        messages.push(
-          "販売状況が未取得の商品があります。" +
-          "新しいscan.pyで巡回後、再読み込みしてください。"
-        );
-      }
-      document.getElementById("warning").textContent = messages.join(" ");
-
-      const container = document.getElementById("items");
-      container.replaceChildren();
-
-      if (!filtered.length) {
-        showEmpty(
-          "この条件に該当する標本はありません。" +
-          "販売状況を「すべて」にするか、販売店・検索条件を変更してください。"
-        );
-        return;
-      }
-
-      const fragment = document.createDocumentFragment();
-      filtered.forEach(item => {
-        const card = document.createElement("article");
-        card.className = "item";
-
-        const productUrl = safeUrl(item.url);
-        const imageUrl = safeUrl(item.image);
-
-        if (imageUrl) {
-          const thumbnail = productUrl
-            ? makeLink(productUrl)
-            : document.createElement("div");
-          thumbnail.className = "thumbnail";
-
-          const img = document.createElement("img");
-          img.src = imageUrl;
-          img.alt = item.title || "鉱物標本";
-          img.loading = "lazy";
-          img.decoding = "async";
-          img.addEventListener("error", () => thumbnail.remove());
-          thumbnail.appendChild(img);
-          card.appendChild(thumbnail);
-        }
-
-        const details = document.createElement("div");
-        details.className = "details";
-
-        const site = document.createElement("div");
-        site.className = "site";
-        site.textContent = item.site || "販売情報";
-
-        const availability = availabilityOf(item);
-        const badge = document.createElement("span");
-        badge.className = `badge ${availability}`;
-        badge.textContent = item.stale
-          ? "状況未確認・前回のデータ"
-          : labels[availability];
-
-        const title = document.createElement("h2");
-        title.textContent = item.title || "名称不明";
-        details.append(site, badge, title);
-
-        if (productUrl) {
-          const link = makeLink(productUrl);
-          link.className = "product-link";
-          link.textContent = "販売ページを開く ↗";
-          details.appendChild(link);
-        }
-
-        card.appendChild(details);
-        fragment.appendChild(card);
-      });
-      container.appendChild(fragment);
-    }
-
-    document.getElementById("search")
-      .addEventListener("input", render);
-    ["shop", "availability", "sort"].forEach(id =>
-      document.getElementById(id).addEventListener("change", render)
-    );
-    document.getElementById("refresh")
-      .addEventListener("click", loadItems);
-
-    loadItems();
-  </script>
+<header><h1>Mineral Scout</h1><p>鉱物標本の新着を見つける</p></header>
+<main>
+<div class="toolbar"><input id="search" type="search" aria-label="標本名・販売店で検索" placeholder="標本名・販売店で検索"><button id="refresh">更新</button></div>
+<div class="filters">
+<label>販売状況<select id="availability"><option value="available">販売中</option><option value="sold_out">SOLD OUT</option><option value="all">すべて</option><option value="unknown">状況未確認</option></select></label>
+<label>販売店<select id="shop"><option value="">すべての販売店</option></select></label>
+<label>表示順<select id="sort"><option value="source">取得順</option><option value="site">販売店順</option></select></label>
+</div>
+<p class="note">価格は販売元の表示通貨のまま掲載しています。送料・税・最新の在庫は販売ページでご確認ください。AMFの価格は順次取得します。</p>
+<p id="status" aria-live="polite">読み込み中...</p><p id="warning" role="status"></p><section id="items"></section>
+</main>
+<footer>Mineral Scout · 画像・販売情報は各販売元で確認してください</footer>
+<script>
+let allItems=[], updated='未更新', errors=[];
+const labels={available:'販売中',sold_out:'SOLD OUT',unknown:'状況未確認'};
+function availabilityOf(item){return Object.hasOwn(labels,item.availability)?item.availability:'unknown';}
+function safeUrl(value){if(!value)return '';try{const url=new URL(value,location.href);return ['https:','http:'].includes(url.protocol)?url.href:'';}catch{return '';}}
+function makeLink(url){const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener noreferrer';return a;}
+function showEmpty(message){const box=document.createElement('div');box.className='empty';box.textContent=message;document.getElementById('items').replaceChildren(box);}
+function updateShops(){const el=document.getElementById('shop'),previous=el.value;const shops=[...new Set(allItems.map(i=>i.site).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja'));el.replaceChildren(new Option('すべての販売店',''));shops.forEach(s=>el.add(new Option(s,s)));el.value=shops.includes(previous)?previous:'';}
+async function loadItems(){
+ const status=document.getElementById('status'),button=document.getElementById('refresh');button.disabled=true;status.textContent='データを読み込み中...';
+ try{
+  const response=await fetch('./data/latest.json?t='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('取得失敗');const data=await response.json();
+  allItems=Array.isArray(data.items)?data.items:[];errors=Array.isArray(data.errors)?data.errors:[];updated=data.updated?new Date(data.updated).toLocaleString('ja-JP'):'未更新';updateShops();render();
+ }catch{status.textContent='データを読み込めませんでした。';document.getElementById('warning').textContent='';showEmpty('時間を置いて「更新」を押してください。');}
+ finally{button.disabled=false;}
+}
+function appendPrice(details,item){
+ const price=document.createElement('p');price.className='price';
+ const hasPrice=typeof item.price_text==='string'&&item.price_text.trim();
+ if(item.price_status==='inquiry'){price.textContent='価格要問い合わせ';}
+ else if(hasPrice){price.textContent=item.price_text;}
+ else{price.textContent='価格未確認';price.classList.add('unconfirmed');}
+ details.appendChild(price);
+ const notes=[];
+ if(item.availability==='sold_out'&&hasPrice)notes.push('売り切れ商品の掲載価格');
+ if(item.price_cached||item.stale)notes.push('過去の取得価格');
+ if(hasPrice||item.price_status==='inquiry'){
+  const date=new Date(item.price_checked_at);
+  if(!Number.isNaN(date.getTime()))notes.push('価格確認 '+date.toLocaleDateString('ja-JP'));
+ }
+ if(notes.length){const note=document.createElement('p');note.className='price-note';note.textContent=notes.join(' · ');details.appendChild(note);}
+}
+function render(){
+ const query=document.getElementById('search').value.trim().toLowerCase(),shop=document.getElementById('shop').value,selected=document.getElementById('availability').value;
+ const matching=allItems.filter(i=>(!shop||i.site===shop)&&`${i.title||''} ${i.site||''}`.toLowerCase().includes(query));
+ const counts={available:0,sold_out:0,unknown:0};matching.forEach(i=>counts[availabilityOf(i)]++);
+ const filtered=matching.filter(i=>selected==='all'||availabilityOf(i)===selected);
+ if(document.getElementById('sort').value==='site')filtered.sort((a,b)=>(a.site||'').localeCompare(b.site||'','ja'));
+ document.getElementById('status').textContent=`表示 ${filtered.length}件 · 販売中 ${counts.available} / SOLD OUT ${counts.sold_out} / 未確認 ${counts.unknown} · 最終更新 ${updated}`;
+ const messages=[];
+ if(errors.length)messages.push(`今回取得できなかった販売店：${errors.join('、')}。前回の商品は「状況未確認」で表示します。`);
+ if(allItems.some(i=>!i.availability))messages.push('販売状況が未取得の商品があります。新しいscan.pyで巡回後、再読み込みしてください。');
+ if(allItems.length&&allItems.every(i=>!i.price_status))messages.push('価格データがまだありません。価格対応版のscan.pyで巡回してください。');
+ document.getElementById('warning').textContent=messages.join(' ');
+ const container=document.getElementById('items');container.replaceChildren();
+ if(!filtered.length){showEmpty('この条件に該当する標本はありません。販売状況を「すべて」にするか、販売店・検索条件を変更してください。');return;}
+ const fragment=document.createDocumentFragment();
+ filtered.forEach(item=>{
+  const card=document.createElement('article');card.className='item';const productUrl=safeUrl(item.url),imageUrl=safeUrl(item.image);
+  if(imageUrl){const thumb=productUrl?makeLink(productUrl):document.createElement('div');thumb.className='thumbnail';const img=document.createElement('img');img.src=imageUrl;img.alt=item.title||'鉱物標本';img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>thumb.remove());thumb.appendChild(img);card.appendChild(thumb);}
+  const details=document.createElement('div');details.className='details';const site=document.createElement('div');site.className='site';site.textContent=item.site||'販売情報';
+  const availability=availabilityOf(item),badge=document.createElement('span');badge.className=`badge ${availability}`;badge.textContent=item.stale?'状況未確認・前回のデータ':labels[availability];
+  const title=document.createElement('h2');title.textContent=item.title||'名称不明';details.append(site,badge,title);appendPrice(details,item);
+  if(productUrl){const link=makeLink(productUrl);link.className='product-link';link.textContent='販売ページを開く ↗';details.appendChild(link);}
+  card.appendChild(details);fragment.appendChild(card);
+ });container.appendChild(fragment);
+}
+document.getElementById('search').addEventListener('input',render);
+['shop','availability','sort'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+document.getElementById('refresh').addEventListener('click',loadItems);
+loadItems();
+</script>
 </body>
 </html>
