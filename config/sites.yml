@@ -16,3 +16,9 @@ sites:
     url: "https://www.peanutsminerals.com/"
     selector: 'a[href*="/items/"]'
     enabled: true
+    
+  - name: "Fine Art Minerals"
+    type: "html"
+    url: "https://fineartminerals.com/shop/?orderby=date"
+    selector: ".product .wd-entities-title a"
+    enabled: true
