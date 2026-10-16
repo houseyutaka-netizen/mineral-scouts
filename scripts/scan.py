@@ -91,7 +91,6 @@ def find_image(tag, card, base):
 def detect_status(card, site_url):
     text = card.get_text(" ", strip=True)
 
-    # 売り切れ画像のalt・商品枠内のクラス名も確認
     image_labels = " ".join(
         img.get("alt", "") for img in card.find_all("img")
     )
@@ -104,7 +103,6 @@ def detect_status(card, site_url):
     if SOLD.search(evidence):
         return "sold_out"
 
-    # 予約・取り置き等を販売中に混ぜない
     if re.search(
         r"\breserved\b|on\s+hold|取り置き|商談中|予約販売|pre[\s-]?order",
         text,
@@ -112,12 +110,9 @@ def detect_status(card, site_url):
     ):
         return "unknown"
 
-    if AVAILABLE.search(text):
-        return "available"
-
     host = urlparse(site_url).hostname or ""
-    
-        if host in {"fineartminerals.com", "www.fineartminerals.com"}:
+
+    if host in {"fineartminerals.com", "www.fineartminerals.com"}:
         classes = set(card.get("class", []))
         if "outofstock" in classes:
             return "sold_out"
@@ -129,7 +124,9 @@ def detect_status(card, site_url):
             return "available"
         return "unknown"
 
-    # AMFは商品枠の見出しが鉱物名、売切れ時はSOLD OUTになる形式。
+    if AVAILABLE.search(text):
+        return "available"
+
     if host in {"amf7.com", "www.amf7.com"}:
         heading = card.find("h4")
         if (
@@ -140,7 +137,6 @@ def detect_status(card, site_url):
         ):
             return "available"
 
-    # この2店は、売切れ表示がなく価格を掲載した商品枠を販売中と推定。
     if host in {
         "crystalclassics.com", "www.crystalclassics.com",
         "peanutsminerals.com", "www.peanutsminerals.com",
