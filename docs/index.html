@@ -54,9 +54,27 @@
     }
     input { flex: 1; width: 50%; }
     button { cursor: pointer; }
-    #status {
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: #627464;
+    }
+    label select { width: 100%; color: #292d29; }
+    #status, .note {
       font-size: 12px;
       color: #686d67;
+      line-height: 1.7;
+    }
+    #warning {
+      color: #8d5419;
+      font-size: 12px;
       line-height: 1.7;
     }
     #items {
@@ -86,8 +104,18 @@
     .site {
       font-size: 12px;
       color: #627464;
-      margin-bottom: 7px;
+      margin-bottom: 8px;
     }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      border-radius: 5px;
+      padding: 4px 7px;
+      margin-bottom: 10px;
+    }
+    .available { background: #e5f2e8; color: #285f37; }
+    .sold_out { background: #f4e5e5; color: #934343; }
+    .unknown { background: #f4eedf; color: #7b642f; }
     .item h2 {
       font-size: 15px;
       line-height: 1.6;
@@ -118,6 +146,7 @@
     }
     @media (max-width: 700px) {
       #items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 380px) {
       #items { grid-template-columns: 1fr; }
@@ -137,13 +166,38 @@
         placeholder="標本名・販売店で検索">
       <button id="refresh">更新</button>
     </div>
-    <div class="toolbar">
-      <select id="sort" aria-label="表示順">
-        <option value="source">取得順</option>
-        <option value="site">販売店順</option>
-      </select>
+
+    <div class="filters">
+      <label>
+        販売状況
+        <select id="availability">
+          <option value="available">販売中</option>
+          <option value="sold_out">SOLD OUT</option>
+          <option value="all">すべて</option>
+          <option value="unknown">状況未確認</option>
+        </select>
+      </label>
+      <label>
+        販売店
+        <select id="shop">
+          <option value="">すべての販売店</option>
+        </select>
+      </label>
+      <label>
+        表示順
+        <select id="sort">
+          <option value="source">取得順</option>
+          <option value="site">販売店順</option>
+        </select>
+      </label>
     </div>
+
+    <p class="note">
+      販売状況は巡回時の商品一覧から判定しています。
+      最新の在庫は販売ページでご確認ください。
+    </p>
     <p id="status" aria-live="polite">読み込み中...</p>
+    <p id="warning" role="status"></p>
     <section id="items"></section>
   </main>
 
@@ -154,6 +208,17 @@
   <script>
     let allItems = [];
     let updated = "未更新";
+    let errors = [];
+    const labels = {
+      available: "販売中",
+      sold_out: "SOLD OUT",
+      unknown: "状況未確認"
+    };
+
+    function availabilityOf(item) {
+      return Object.hasOwn(labels, item.availability)
+        ? item.availability : "unknown";
+    }
 
     function safeUrl(value) {
       if (!value) return "";
@@ -175,11 +240,22 @@
     }
 
     function showEmpty(message) {
-      const container = document.getElementById("items");
       const box = document.createElement("div");
       box.className = "empty";
       box.textContent = message;
-      container.replaceChildren(box);
+      document.getElementById("items").replaceChildren(box);
+    }
+
+    function updateShops() {
+      const select = document.getElementById("shop");
+      const previous = select.value;
+      const shops = [...new Set(
+        allItems.map(item => item.site).filter(Boolean)
+      )].sort((a, b) => a.localeCompare(b, "ja"));
+
+      select.replaceChildren(new Option("すべての販売店", ""));
+      shops.forEach(shop => select.add(new Option(shop, shop)));
+      select.value = shops.includes(previous) ? previous : "";
     }
 
     async function loadItems() {
@@ -194,15 +270,19 @@
           { cache: "no-store" }
         );
         if (!response.ok) throw new Error("取得失敗");
-
         const data = await response.json();
+
         allItems = Array.isArray(data.items) ? data.items : [];
+        errors = Array.isArray(data.errors) ? data.errors : [];
         updated = data.updated
           ? new Date(data.updated).toLocaleString("ja-JP")
           : "未更新";
+
+        updateShops();
         render();
       } catch {
         status.textContent = "データを読み込めませんでした。";
+        document.getElementById("warning").textContent = "";
         showEmpty("時間を置いて「更新」を押してください。");
       } finally {
         button.disabled = false;
@@ -212,9 +292,20 @@
     function render() {
       const query = document.getElementById("search")
         .value.trim().toLowerCase();
-      const filtered = allItems.filter(item =>
+      const shop = document.getElementById("shop").value;
+      const selected = document.getElementById("availability").value;
+
+      const matching = allItems.filter(item =>
+        (!shop || item.site === shop) &&
         `${item.title || ""} ${item.site || ""}`
           .toLowerCase().includes(query)
+      );
+
+      const counts = { available: 0, sold_out: 0, unknown: 0 };
+      matching.forEach(item => counts[availabilityOf(item)]++);
+
+      const filtered = matching.filter(item =>
+        selected === "all" || availabilityOf(item) === selected
       );
 
       if (document.getElementById("sort").value === "site") {
@@ -224,19 +315,37 @@
       }
 
       document.getElementById("status").textContent =
-        `表示 ${filtered.length}件 / 全${allItems.length}件` +
-        ` · 最終更新 ${updated}`;
+        `表示 ${filtered.length}件 · ` +
+        `販売中 ${counts.available} / SOLD OUT ${counts.sold_out}` +
+        ` / 未確認 ${counts.unknown} · 最終更新 ${updated}`;
+
+      const messages = [];
+      if (errors.length) {
+        messages.push(
+          `今回取得できなかった販売店：${errors.join("、")}。` +
+          "前回の商品は「状況未確認」で表示します。"
+        );
+      }
+      if (allItems.some(item => !item.availability)) {
+        messages.push(
+          "販売状況が未取得の商品があります。" +
+          "新しいscan.pyで巡回後、再読み込みしてください。"
+        );
+      }
+      document.getElementById("warning").textContent = messages.join(" ");
 
       const container = document.getElementById("items");
       container.replaceChildren();
 
       if (!filtered.length) {
-        showEmpty("該当する標本はありません。");
+        showEmpty(
+          "この条件に該当する標本はありません。" +
+          "販売状況を「すべて」にするか、販売店・検索条件を変更してください。"
+        );
         return;
       }
 
       const fragment = document.createDocumentFragment();
-
       filtered.forEach(item => {
         const card = document.createElement("article");
         card.className = "item";
@@ -267,10 +376,16 @@
         site.className = "site";
         site.textContent = item.site || "販売情報";
 
+        const availability = availabilityOf(item);
+        const badge = document.createElement("span");
+        badge.className = `badge ${availability}`;
+        badge.textContent = item.stale
+          ? "状況未確認・前回のデータ"
+          : labels[availability];
+
         const title = document.createElement("h2");
         title.textContent = item.title || "名称不明";
-
-        details.append(site, title);
+        details.append(site, badge, title);
 
         if (productUrl) {
           const link = makeLink(productUrl);
@@ -282,14 +397,14 @@
         card.appendChild(details);
         fragment.appendChild(card);
       });
-
       container.appendChild(fragment);
     }
 
     document.getElementById("search")
       .addEventListener("input", render);
-    document.getElementById("sort")
-      .addEventListener("change", render);
+    ["shop", "availability", "sort"].forEach(id =>
+      document.getElementById(id).addEventListener("change", render)
+    );
     document.getElementById("refresh")
       .addEventListener("click", loadItems);
 
