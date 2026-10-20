@@ -153,7 +153,149 @@ def extract_price(card, page_url, detail=False):
     return price_result(source=source)
 
 
+def auction_item(card, link, base, title=None, price_node=None, price_kind='listed', ends_at=''):
+    text = price_node.get_text(' ', strip=True) if price_node is not None else ''
+    amounts = list(dict.fromkeys(m.group().strip() for m in MONEY.finditer(text)))
+    return {
+        'title': title or link.get_text(' ', strip=True),
+        'url': absolute_url(link.get('href'), base), 'date': '',
+        'image': find_image(link, card, base), 'listing_type': 'auction',
+        'availability': 'unknown', 'auction_status': 'listed',
+        'ends_at': ends_at, 'price_kind': price_kind,
+        'checked_at': now_iso(),
+        **price_result(' / '.join(amounts), 'known' if amounts else 'unknown'),
+    }
+
+
+def parse_auction_page(kind, soup, base):
+    items = []
+    if kind == 'mineralauctions':
+        for card in soup.select('.items .item[data-item]'):
+            link = card.select_one('.name a[href]')
+            if not link:
+                continue
+            end = card.select_one('[data-timestamp]')
+            value = end.get('data-timestamp', '') if end else ''
+            # タイムゾーン付きの時刻だけ採用。
+            try:
+                stamp = datetime.fromisoformat(value.replace('Z', '+00:00'))
+                value = stamp.isoformat() if stamp.tzinfo else ''
+            except ValueError:
+                value = ''
+            price = card.select_one('.price')
+            text = price.get_text(' ', strip=True).lower() if price else ''
+            kind_price = 'current_bid' if 'current bid' in text else ('starting' if 'starting' in text else 'listed')
+            items.append(auction_item(card, link, base, price_node=price, price_kind=kind_price, ends_at=value))
+    elif kind == 'fam_auctions':
+        for card in soup.select('.product.product-type-auction'):
+            link = card.select_one('.wd-entities-title a[href]')
+            if not link:
+                continue
+            date = card.select_one('.date_auction[data-yith-auction-time]')
+            end = ''
+            label = card.select_one('.ywcact_auction_end_start_label')
+            if date and label and 'ends' in label.get_text().lower():
+                try:
+                    end = datetime.fromtimestamp(int(date['data-yith-auction-time']), timezone.utc).isoformat()
+                except (ValueError, OverflowError, OSError):
+                    pass
+            price = card.select_one('.price')
+            text = price.get_text(' ', strip=True).lower() if price else ''
+            item = auction_item(card, link, base, price_node=price,
+                                price_kind='current_bid' if 'current bid' in text else ('starting' if 'starting' in text else 'listed'), ends_at=end)
+            if label and 'starts' in label.get_text().lower():
+                item['auction_status'] = 'upcoming'
+            items.append(item)
+    elif kind == 'spirifer_auctions':
+        for cell in soup.select('td.productList0, td.productList1'):
+            row = cell.find_parent('tr')
+            link = row.select_one('a[href^="/product,"]') if row else None
+            title = cell.select_one('.productListName')
+            cols = cell.select('td.p14')
+            if not link or not title or len(cols) < 2:
+                continue
+            # この表の列順は Bids / Price / Time left。取り消し価格を除く。
+            price = BeautifulSoup(str(cols[1]), 'html.parser')
+            discount = price.select_one('.storeProductRed')
+            if discount:
+                price = discount
+            for old in price.select('s, del, strike, .storeProductPrice2'):
+                old.decompose()
+            item = auction_item(row, link, base, title=title.get_text(' ', strip=True), price_node=price)
+            bids = cols[0].get_text(strip=True)
+            if bids.isdigit():
+                item['bid_count'] = int(bids)
+                item['price_kind'] = 'current_bid' if int(bids) else 'starting'
+            items.append(item)
+    elif kind == 'erocks_hot':
+        # Hot Auction items の3分類だけ。Hot Fixed Priceや関連商品は対象外。
+        hot = soup.select_one('#block-panels-mini-homepage-accordian-hot-items')
+        if hot is None:
+            raise ValueError('e-Rocks: Hot Auction items枠が見つかりません')
+        for index, label in enumerate(('Watches', 'Views', 'Bids')):
+            pane = hot.select_one(f'#quicktabs-tabpage-homepage_accordian_hot_items-{index}')
+            if pane is None:
+                raise ValueError(f'e-Rocks: {label}枠が見つかりません')
+            for card in pane.select('li.list-item'):
+                link = card.select_one('.item-title a[href^="/item/"]')
+                if not link:
+                    continue
+                price = card.select_one('.field-name-field-itm-starting-price')
+                # この枠の金額は現在入札額とは断定せず「掲載価格」とする。
+                item = auction_item(card, link, base, price_node=price)
+                item['hot_categories'] = [label]
+                bids = card.select_one('.stat-bids')
+                if bids:
+                    match = re.search(r'(\d+)\s+bids?', bids.get_text(), re.I)
+                    if match:
+                        item['bid_count'] = int(match.group(1))
+                items.append(item)
+    else:
+        raise ValueError(f'未知のオークション形式: {kind}')
+    return items
+
+
+def fetch_auctions(site, session):
+    kind, url, visited, items = site['type'], site['url'], set(), []
+    while url:
+        if url in visited or len(visited) >= 20:
+            raise ValueError('ページ送りを完了できませんでした')
+        if visited:
+            time.sleep(1.5)
+        visited.add(url)
+        response = session.get(url, timeout=25)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, 'html.parser')
+        page_items = parse_auction_page(kind, soup, response.url)
+        if not page_items:
+            # 制限ページや構造変更を0件成功と扱わず、前回分を未確認で保持。
+            raise ValueError('オークション取得0件（開催なし、またはページ構造の変更）')
+        items.extend(page_items)
+        next_link = None
+        if kind == 'mineralauctions':
+            next_link = soup.select_one('.pagination a[rel="next"]')
+        elif kind == 'fam_auctions':
+            next_link = soup.select_one('a.next.page-numbers')
+        url = absolute_url(next_link.get('href'), response.url) if next_link else ''
+        if url and urlparse(url).hostname != urlparse(site['url']).hostname:
+            raise ValueError('ページ送りのドメインが異なります')
+    unique = {}
+    for item in items:
+        if not item['url'] or not item['title']:
+            continue
+        if item['url'] not in unique:
+            unique[item['url']] = item
+        else:
+            old = unique[item['url']]
+            old['hot_categories'] = list(dict.fromkeys(old.get('hot_categories', []) + item.get('hot_categories', [])))
+            if 'bid_count' in item:
+                old['bid_count'] = item['bid_count']
+    return list(unique.values())
+
+
 def fetch_items(site, session):
+    if site.get('listing_type') == 'auction':
+        return fetch_auctions(site, session)
     response = session.get(site['url'], timeout=25)
     response.raise_for_status()
     items = []
@@ -262,7 +404,7 @@ def main():
             successful_sites += 1
             for item in items:
                 url = item['url']
-                item.update(site=site['name'], id=hashlib.sha256(url.encode()).hexdigest()[:16], stale=False)
+                item.update(listing_type=site.get('listing_type', 'retail'), site=site['name'], id=hashlib.sha256(url.encode()).hexdigest()[:16], stale=False)
                 results.append(item)
                 if url not in known_urls and url not in current_urls:
                     new_items.append(item)
@@ -270,13 +412,16 @@ def main():
             counts = {s: sum(i['availability'] == s for i in items) for s in ('available', 'sold_out', 'unknown')}
             images = sum(bool(i['image']) for i in items)
             prices = sum(i.get('price_status') == 'known' for i in items)
-            print(f"OK: {site['name']} {len(items)}件 / 画像{images}件 / 価格{prices}件 / 販売中{counts['available']}件 / SOLD OUT {counts['sold_out']}件 / 未確認{counts['unknown']}件")
+            if site.get('listing_type') == 'auction':
+                print(f"OK: {site['name']} オークション{len(items)}件 / 画像{images}件 / 価格{prices}件")
+            else:
+                print(f"OK: {site['name']} {len(items)}件 / 画像{images}件 / 価格{prices}件 / 販売中{counts['available']}件 / SOLD OUT {counts['sold_out']}件 / 未確認{counts['unknown']}件")
         except Exception as exc:
             print(f"ERROR: {site['name']}: {exc}")
             errors.append(site['name'])
             for old in previous.get('items', []):
                 if old.get('site') == site['name']:
-                    results.append({**old, 'availability': 'unknown', 'stale': True, 'price_cached': True})
+                    results.append({**old, 'listing_type': site.get('listing_type', 'retail'), 'availability': 'unknown', 'auction_status': 'unknown', 'stale': True, 'price_cached': True})
     if not successful_sites:
         raise RuntimeError('全サイトで取得失敗。保存済みデータを維持します。')
     if not known_urls:
