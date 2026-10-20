@@ -1,24 +1,52 @@
 sites:
-  - name: "AMF"
-    type: "html"
-    url: "https://www.amf7.com/indexm.html"
-    selector: ".item a[href]"
+  - name: AMF
+    type: html
+    listing_type: retail
+    url: https://www.amf7.com/indexm.html
+    selector: '.item a[href]'
     enabled: true
 
-  - name: "Crystal Classics"
-    type: "html"
-    url: "https://crystalclassics.com/collections/complete-online-inventory?sort_by=created-descending"
+  - name: Crystal Classics
+    type: html
+    listing_type: retail
+    url: https://crystalclassics.com/collections/complete-online-inventory?sort_by=created-descending
     selector: 'a[id^="CardLink-"][href*="/products/"]'
     enabled: true
 
-  - name: "PEANUTS MINERALS"
-    type: "html"
-    url: "https://www.peanutsminerals.com/"
+  - name: PEANUTS MINERALS
+    type: html
+    listing_type: retail
+    url: https://www.peanutsminerals.com/
     selector: 'a[href*="/items/"]'
     enabled: true
-    
-  - name: "Fine Art Minerals"
-    type: "html"
-    url: "https://fineartminerals.com/shop/?orderby=date"
-    selector: ".product .wd-entities-title a"
+
+  - name: Fine Art Minerals
+    type: html
+    listing_type: retail
+    url: https://fineartminerals.com/shop/?orderby=date
+    selector: '.product .wd-entities-title a'
+    enabled: true
+
+  - name: MineralAuctions
+    type: mineralauctions
+    listing_type: auction
+    url: https://www.mineralauctions.com/
+    enabled: true
+
+  - name: FAM Auctions
+    type: fam_auctions
+    listing_type: auction
+    url: https://famauctions.com/live-auctions/
+    enabled: true
+
+  - name: Spirifer Minerals
+    type: spirifer_auctions
+    listing_type: auction
+    url: https://www.spiriferminerals.com/auctions/
+    enabled: true
+
+  - name: e-Rocks（Hot Auction items）
+    type: erocks_hot
+    listing_type: auction
+    url: https://e-rocks.com/
     enabled: true
