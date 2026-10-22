@@ -24,6 +24,9 @@ input,select,button{font:inherit;border:1px solid var(--line);border-radius:9px;
 .tabs{display:flex;gap:8px;margin-bottom:20px}.tabs button{flex:1;font-weight:600}.tabs button[aria-pressed="true"]{background:var(--green);color:white;border-color:var(--green)}
 .auction-meta{font-size:12px;line-height:1.8;color:#626b62;margin:6px 0 14px}.price-label{font-size:11px;font-weight:400;display:block;color:#686d67}.listed{background:#e5edf2;color:#36596f}.elapsed{background:#eee;color:#666}.upcoming{background:#f1ecfa;color:#72548d}
 button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #b89845;outline-offset:2px}
+.thumbnail{position:relative}.thumbnail.no-image{display:flex;align-items:center;justify-content:center;color:#888;font-size:12px}
+.end-overlay{position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:rgba(25,38,30,.9);color:#fff;font-size:12px;font-weight:500;line-height:1.5;overflow-wrap:anywhere}
+.end-overlay.elapsed{background:rgba(70,70,70,.92);color:#fff}
 </style>
 </head>
 <body>
@@ -34,7 +37,7 @@ button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{ou
 <div class="filters">
 <label><span id="filter-label">販売状況</span><select id="availability"><option value="available">販売中</option><option value="sold_out">SOLD OUT</option><option value="all">すべて</option><option value="unknown">状況未確認</option></select></label>
 <label>販売店<select id="shop"><option value="">すべての販売店</option></select></label>
-<label>表示順<select id="sort"><option value="source">取得順</option><option value="site">販売店順</option><option value="ending" id="ending-option" hidden>終了予定が近い順</option></select></label>
+<label>表示順<select id="sort"><option value="source">新しく取得した順</option><option value="site">販売店順</option><option value="ending" id="ending-option" hidden>終了予定が近い順</option></select></label>
 </div>
 <p class="note" id="retail-note">価格は販売元の表示通貨のまま掲載しています。送料・税・最新の在庫は販売ページでご確認ください。AMFの価格は順次取得します。</p>
 <p class="note" id="auction-note" hidden>価格・入札数・開催状況は巡回時点の情報です。「更新」は保存済みデータの再読み込みです。終了時刻は日本時間（JST）で表示します。終了延長や最新の入札額は出品ページで確認してください。e-RocksはHot Auction itemsのみです。</p>
@@ -104,10 +107,13 @@ function render(){
  const matching=tabItems.filter(i=>(!shop||i.site===shop)&&`${i.title||''} ${i.site||''}`.toLowerCase().includes(query));
  const filtered=matching.filter(i=>selected==='all'||stateOf(i)===selected);
  const sort=document.getElementById('sort').value;
+ // 同時取得は商品名順。販売店順を暗黙の優先条件にしない。
+ filtered.sort((a,b)=>(Date.parse(b.first_seen_at)||0)-(Date.parse(a.first_seen_at)||0)||(a.title||'').localeCompare(b.title||'','ja')||(a.url||'').localeCompare(b.url||''));
  if(sort==='site')filtered.sort((a,b)=>(a.site||'').localeCompare(b.site||'','ja'));
  if(sort==='ending')filtered.sort((a,b)=>(Date.parse(a.ends_at)||Infinity)-(Date.parse(b.ends_at)||Infinity));
  document.getElementById('status').textContent=`表示 ${filtered.length}件 / このタブ ${tabItems.length}件 · 最終更新 ${updated}`;
  const messages=[];
+ if(tabItems.some(i=>!i.first_seen_at))messages.push('取得日時がない商品があります。新しいscan.pyで巡回すると記録が始まります。');
  if(errors.length)messages.push(`今回取得できなかった販売店：${errors.join('、')}。前回の商品は「状況未確認」で表示します。`);
  if(allItems.some(i=>!i.availability))messages.push('販売状況が未取得の商品があります。新しいscan.pyで巡回後、再読み込みしてください。');
  if(allItems.length&&allItems.every(i=>!i.price_status))messages.push('価格データがまだありません。価格対応版のscan.pyで巡回してください。');
@@ -117,7 +123,20 @@ function render(){
  const fragment=document.createDocumentFragment();
  filtered.forEach(item=>{
   const card=document.createElement('article');card.className='item';const productUrl=safeUrl(item.url),imageUrl=safeUrl(item.image);
-  if(imageUrl){const thumb=productUrl?makeLink(productUrl):document.createElement('div');thumb.className='thumbnail';const img=document.createElement('img');img.src=imageUrl;img.alt=item.title||'鉱物標本';img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>thumb.remove());thumb.appendChild(img);card.appendChild(thumb);}
+  if(imageUrl||isAuction(item)){
+   const thumb=productUrl?makeLink(productUrl):document.createElement('div');thumb.className='thumbnail';
+   const placeholder=()=>{thumb.classList.add('no-image');const text=document.createElement('span');text.textContent='画像なし';thumb.prepend(text);};
+   if(imageUrl){const img=document.createElement('img');img.src=imageUrl;img.alt=item.title||'鉱物標本';img.loading='lazy';img.decoding='async';img.addEventListener('error',()=>{img.remove();placeholder();},{once:true});thumb.appendChild(img);}else placeholder();
+   if(isAuction(item)){
+    const overlay=document.createElement('span');overlay.className='end-overlay';
+    const ending=dateJST(item.ends_at);const elapsed=Number.isFinite(Date.parse(item.ends_at))&&Date.parse(item.ends_at)<=Date.now();
+    overlay.textContent=ending?(elapsed?'終了予定を経過 · ':'終了予定 ')+ending:'終了時刻未確認';
+    if(elapsed)overlay.classList.add('elapsed');
+    if(item.stale)overlay.textContent+='（前回の情報）';
+    thumb.appendChild(overlay);
+   }
+   card.appendChild(thumb);
+  }
   const details=document.createElement('div');details.className='details';const site=document.createElement('div');site.className='site';site.textContent=item.site||'販売情報';
   const availability=stateOf(item),badge=document.createElement('span');badge.className=`badge ${availability}`;badge.textContent=item.stale?'状況未確認・前回のデータ':(isAuction(item)?auctionLabels:labels)[availability];
   const title=document.createElement('h2');title.textContent=item.title||'名称不明';details.append(site,badge,title);appendPrice(details,item);
