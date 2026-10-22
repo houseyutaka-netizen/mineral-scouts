@@ -385,9 +385,17 @@ def enrich_amf(items, previous_by_url, session):
 
 def main():
     config = yaml.safe_load(CONFIG.read_text(encoding='utf-8')) or {}
-    known_urls = set(load_json(STATE, {'urls': []}).get('urls', []))
+    state = load_json(STATE, {'urls': []})
+    known_urls = set(state.get('urls', []))
+    scan_started = now_iso()
     previous = load_json(OUTPUT, {'items': []})
     previous_by_url = {i['url']: i for i in previous.get('items', []) if i.get('url')}
+    # 同じ巡回で発見した商品は同時刻。販売店の巡回順で新旧を作らない。
+    # 旧データには日時がないため、前回更新日時を移行時の基準にする。
+    baseline = previous.get('updated') or '1970-01-01T00:00:00+00:00'
+    first_seen = dict(state.get('first_seen', {}))
+    for url in known_urls | set(previous_by_url):
+        first_seen.setdefault(url, previous_by_url.get(url, {}).get('first_seen_at') or baseline)
     current_urls, results, new_items, errors = set(), [], [], []
     successful_sites = 0
     session = requests.Session()
@@ -404,6 +412,7 @@ def main():
             successful_sites += 1
             for item in items:
                 url = item['url']
+                item['first_seen_at'] = first_seen.setdefault(url, scan_started)
                 item.update(listing_type=site.get('listing_type', 'retail'), site=site['name'], id=hashlib.sha256(url.encode()).hexdigest()[:16], stale=False)
                 results.append(item)
                 if url not in known_urls and url not in current_urls:
@@ -421,12 +430,12 @@ def main():
             errors.append(site['name'])
             for old in previous.get('items', []):
                 if old.get('site') == site['name']:
-                    results.append({**old, 'listing_type': site.get('listing_type', 'retail'), 'availability': 'unknown', 'auction_status': 'unknown', 'stale': True, 'price_cached': True})
+                    results.append({**old, 'first_seen_at': first_seen.get(old.get('url'), baseline), 'listing_type': site.get('listing_type', 'retail'), 'availability': 'unknown', 'auction_status': 'unknown', 'stale': True, 'price_cached': True})
     if not successful_sites:
         raise RuntimeError('全サイトで取得失敗。保存済みデータを維持します。')
     if not known_urls:
         new_items = []
-    save_json(STATE, {'urls': sorted(known_urls | current_urls)})
+    save_json(STATE, {'urls': sorted(known_urls | current_urls), 'first_seen': first_seen})
     save_json(OUTPUT, {'updated': now_iso(), 'errors': errors, 'items': results})
     topic = os.environ.get('NTFY_TOPIC', '').strip()
     if topic and known_urls:
