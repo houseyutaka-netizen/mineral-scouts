@@ -42,6 +42,7 @@
     "https://e-rocks.com/item/esm1215906/almandine",
     "https://e-rocks.com/item/esm1215907/cassiterite-topaz",
     "https://e-rocks.com/item/esm1215910/rhodonite-galena",
+    "https://e-rocks.com/item/esm1215913/stibnite",
     "https://e-rocks.com/item/esm1215919/galena",
     "https://e-rocks.com/item/esm1215920/stibnite",
     "https://e-rocks.com/item/esm1215931/titanite",
@@ -49,6 +50,7 @@
     "https://e-rocks.com/item/jir1215329/cassiterite",
     "https://e-rocks.com/item/jir1215337/rodalquilarite",
     "https://e-rocks.com/item/jwm1213710/benitoite-neptunite-joaquinite",
+    "https://e-rocks.com/item/jwm1213712/copper-silver",
     "https://e-rocks.com/item/jwt1214706/fluorite",
     "https://e-rocks.com/item/jwt1214730/fluorite-chlorite",
     "https://e-rocks.com/item/jwt1214750/fluorite",
@@ -75,6 +77,7 @@
     "https://e-rocks.com/item/tvm1215195/rhodochrosite",
     "https://e-rocks.com/item/tvm1215243/azurite-malachite",
     "https://e-rocks.com/item/tvm1215417/fluorite",
+    "https://e-rocks.com/item/tvm1215420/fluorite-sphalerite",
     "https://e-rocks.com/item/tvm1215422/cassiterite-arsenopyrite",
     "https://e-rocks.com/item/tvm1215664/fluorite",
     "https://e-rocks.com/item/tvm1215669/fluorite-sphalerite",
@@ -1697,6 +1700,9 @@
     "https://e-rocks.com/item/pdm1216460/cuprite": "2026-10-24T23:14:04.401494+00:00",
     "https://e-rocks.com/item/dav1214493/stibnite": "2026-10-24T23:14:04.401494+00:00",
     "https://e-rocks.com/item/ath1212394/dioptase-calcite": "2026-10-24T23:14:04.401494+00:00",
-    "https://e-rocks.com/item/esm1215920/stibnite": "2026-10-24T23:14:04.401494+00:00"
+    "https://e-rocks.com/item/esm1215920/stibnite": "2026-10-24T23:14:04.401494+00:00",
+    "https://e-rocks.com/item/esm1215913/stibnite": "2026-10-25T23:15:12.559000+00:00",
+    "https://e-rocks.com/item/jwm1213712/copper-silver": "2026-10-25T23:15:12.559000+00:00",
+    "https://e-rocks.com/item/tvm1215420/fluorite-sphalerite": "2026-10-25T23:15:12.559000+00:00"
   }
 }
