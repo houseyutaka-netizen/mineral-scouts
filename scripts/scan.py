@@ -297,6 +297,38 @@ def fetch_auctions(site, session):
     return list(unique.values())
 
 
+def retail_pages(site, session, response):
+    visited = set()
+    limit = int(site.get('max_pages', 200))
+    while True:
+        url = response.url
+        if url in visited:
+            raise ValueError('ページ送りが循環しています。前回データを維持します')
+        visited.add(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        if not soup.select(site.get('selector', 'a')):
+            raise ValueError(f'商品が取得できないページ: {url}')
+        print(f"ページ取得: {site['name']} {len(visited)}ページ目", flush=True)
+        yield soup, url
+        if site.get('paginate', True) is False:
+            return
+        selector = site.get('next_selector') or (
+            'a[rel~="next"][href], .pagination a[aria-label="Next page"][href], '
+            'a.next.page-numbers[href]'
+        )
+        link = soup.select_one(selector)
+        if not link:
+            return
+        next_url = absolute_url(link.get('href'), url)
+        if not next_url or urlparse(next_url).netloc != urlparse(url).netloc:
+            raise ValueError('ページ送りのリンク先が不正です')
+        if len(visited) >= limit:
+            raise ValueError(f'ページ上限{limit}に達しました。max_pagesを確認してください')
+        time.sleep(1.5)
+        response = session.get(next_url, timeout=25)
+        response.raise_for_status()
+
+
 def fetch_items(site, session):
     if site.get('listing_type') == 'auction':
         return fetch_auctions(site, session)
@@ -314,22 +346,22 @@ def fetch_items(site, session):
                 'availability': 'unknown', **price_result(),
             })
     else:
-        soup = BeautifulSoup(response.content, 'html.parser')
-        for tag in soup.select(site.get('selector', 'a')):
-            url = absolute_url(tag.get('href'), response.url)
-            if not url:
-                continue
-            card = product_card(tag)
-            title = tag.get_text(' ', strip=True) or card.get_text(' ', strip=True)
-            if not title and tag.find('img'):
-                title = tag.find('img').get('alt', '').strip()
-            if title:
-                items.append({
-                    'title': title, 'url': url, 'date': '',
-                    'image': find_image(tag, card, response.url),
-                    'availability': detect_status(card, response.url),
-                    **extract_price(card, response.url),
-                })
+        for soup, page_url in retail_pages(site, session, response):
+            for tag in soup.select(site.get('selector', 'a')):
+                url = absolute_url(tag.get('href'), page_url)
+                if not url:
+                    continue
+                card = product_card(tag)
+                title = tag.get_text(' ', strip=True) or card.get_text(' ', strip=True)
+                if not title and tag.find('img'):
+                    title = tag.find('img').get('alt', '').strip()
+                if title:
+                    items.append({
+                        'title': title, 'url': url, 'date': '',
+                        'image': find_image(tag, card, page_url),
+                        'availability': detect_status(card, page_url),
+                        **extract_price(card, page_url),
+                    })
     unique = {}
     priority = {'unknown': 0, 'available': 1, 'sold_out': 2}
     for item in items:
