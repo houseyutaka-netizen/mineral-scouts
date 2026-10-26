@@ -54,6 +54,6 @@ sites:
   - name: Arkfeld Minerals
     type: html
     listing_type: retail
-    url: https://arkfeldminerals.com/collections/sale
+    url: https://arkfeldminerals.com/collections/august-2024?srsltid=AYCX9vJTQo6xUQl6azecWgWaR8Tu72xGecZblY3zV3jWdEC0rB-Fqn-Z
     selector: 'a[id^="CardLink-"][href*="/products/"]'
     enabled: true
