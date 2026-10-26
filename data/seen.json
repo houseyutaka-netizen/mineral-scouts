@@ -996,6 +996,7 @@
     "https://crystalclassics.com/products/malachite-on-quartz-17",
     "https://crystalclassics.com/products/malachite-on-quartz-5",
     "https://crystalclassics.com/products/malachite-with-quartz-18",
+    "https://crystalclassics.com/products/prehnite-10",
     "https://crystalclassics.com/products/primary-malachite-on-quartz-4",
     "https://crystalclassics.com/products/quartz-epimorph-after-fluorite-2",
     "https://e-rocks.com/item/amm1214300/fluorite",
@@ -1004,6 +1005,7 @@
     "https://e-rocks.com/item/ath1212394/dioptase-calcite",
     "https://e-rocks.com/item/ath1212395/stibnite",
     "https://e-rocks.com/item/bng1162959/diopside-grossular-titanite",
+    "https://e-rocks.com/item/cfl1215009/s%C3%A9randite",
     "https://e-rocks.com/item/dav1105370/petrified-wood",
     "https://e-rocks.com/item/dav1214493/stibnite",
     "https://e-rocks.com/item/dav1214494/tugtupite",
@@ -1034,11 +1036,13 @@
     "https://e-rocks.com/item/pdm1216460/cuprite",
     "https://e-rocks.com/item/pdm1216477/malachite",
     "https://e-rocks.com/item/pdm1216480/malachite-psm-baryte-dolomite",
+    "https://e-rocks.com/item/pdm1216495/quartz-plancheite-inclusions",
     "https://e-rocks.com/item/ppm1215365/native-gold-magnetite-aurichalcite",
     "https://e-rocks.com/item/ppm1215368/gerstmannite",
     "https://e-rocks.com/item/ppm1215374/metalod%C3%A8vite-ogdensburgite",
     "https://e-rocks.com/item/ppm1215468/loseyite-pyrochroite-zincite-sussexite",
     "https://e-rocks.com/item/ppm1216761/native-gold",
+    "https://e-rocks.com/item/rht1216399/native-bismuth",
     "https://e-rocks.com/item/rht1216408/cuprian-anglesite",
     "https://e-rocks.com/item/rht1216410/fluorite-stibnite",
     "https://e-rocks.com/item/sky1215750/cadmium",
@@ -3745,6 +3749,10 @@
     "https://crystalclassics.com/products/fluorite-370": "2026-10-26T05:02:07.799385+00:00",
     "https://crystalclassics.com/products/quartz-epimorph-after-fluorite-2": "2026-10-26T05:02:07.799385+00:00",
     "https://crystalclassics.com/products/fluorite-366": "2026-10-26T05:02:07.799385+00:00",
-    "https://crystalclassics.com/products/fluorite-with-marcasite": "2026-10-26T05:02:07.799385+00:00"
+    "https://crystalclassics.com/products/fluorite-with-marcasite": "2026-10-26T05:02:07.799385+00:00",
+    "https://crystalclassics.com/products/prehnite-10": "2026-10-26T23:20:45.806190+00:00",
+    "https://e-rocks.com/item/pdm1216495/quartz-plancheite-inclusions": "2026-10-26T23:20:45.806190+00:00",
+    "https://e-rocks.com/item/rht1216399/native-bismuth": "2026-10-26T23:20:45.806190+00:00",
+    "https://e-rocks.com/item/cfl1215009/s%C3%A9randite": "2026-10-26T23:20:45.806190+00:00"
   }
 }
