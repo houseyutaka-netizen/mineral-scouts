@@ -54,6 +54,6 @@ sites:
   - name: Arkfeld Minerals
     type: html
     listing_type: retail
-    url: https://arkfeldminerals.com/collections/all?sort_by=created-descending
+    url: https://arkfeldminerals.com/collections/all
     selector: 'a[id^="CardLink-"][href*="/products/"]'
     enabled: true
