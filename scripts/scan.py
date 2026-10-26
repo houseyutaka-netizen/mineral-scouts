@@ -19,6 +19,8 @@ OUTPUT = ROOT / 'docs' / 'data' / 'latest.json'
 # AMFの商品ページへの追加アクセスは1巡回20件まで。取得済みは7日再利用。
 DETAIL_LIMIT = 20
 PRICE_CACHE_DAYS = 7
+# 各サイトの一覧取得は1巡回2ページまで。
+LIST_PAGE_LIMIT = 2
 SOLD = re.compile(r'sold[\s_-]*out|out\s+of\s+stock|売り切れ|売切れ|完売|在庫なし', re.I)
 AVAILABLE = re.compile(r'\bin\s+stock\b|在庫あり|カートに入れる|add\s+to\s+(?:cart|basket)', re.I)
 PRICE = re.compile(r'[¥￥$£€]\s*[\d,]+')
@@ -262,7 +264,7 @@ def parse_auction_page(kind, soup, base):
 def fetch_auctions(site, session):
     kind, url, visited, items = site['type'], site['url'], set(), []
     while url:
-        if url in visited or len(visited) >= 20:
+        if url in visited:
             raise ValueError('ページ送りを完了できませんでした')
         if visited:
             time.sleep(1.5)
@@ -281,6 +283,9 @@ def fetch_auctions(site, session):
         elif kind == 'fam_auctions':
             next_link = soup.select_one('a.next.page-numbers')
         url = absolute_url(next_link.get('href'), response.url) if next_link else ''
+        if url and len(visited) >= LIST_PAGE_LIMIT:
+            print(f"{site['name']}: 一覧{LIST_PAGE_LIMIT}ページで取得完了")
+            break
         if url and urlparse(url).hostname != urlparse(site['url']).hostname:
             raise ValueError('ページ送りのドメインが異なります')
     unique = {}
@@ -299,7 +304,7 @@ def fetch_auctions(site, session):
 
 def retail_pages(site, session, response):
     visited = set()
-    limit = int(site.get('max_pages', 200))
+    limit = LIST_PAGE_LIMIT
     while True:
         url = response.url
         if url in visited:
@@ -323,7 +328,8 @@ def retail_pages(site, session, response):
         if not next_url or urlparse(next_url).netloc != urlparse(url).netloc:
             raise ValueError('ページ送りのリンク先が不正です')
         if len(visited) >= limit:
-            raise ValueError(f'ページ上限{limit}に達しました。max_pagesを確認してください')
+            print(f"{site['name']}: 一覧{limit}ページで取得完了")
+            return
         time.sleep(1.5)
         response = session.get(next_url, timeout=25)
         response.raise_for_status()
