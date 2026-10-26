@@ -50,3 +50,10 @@ sites:
     listing_type: auction
     url: https://e-rocks.com/
     enabled: true
+
+  - name: Arkfeld Minerals
+    type: html
+    listing_type: retail
+    url: https://arkfeldminerals.com/collections/sale
+    selector: 'a[id^="CardLink-"][href*="/products/"]'
+    enabled: true
