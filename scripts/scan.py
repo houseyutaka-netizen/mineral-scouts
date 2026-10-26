@@ -106,7 +106,11 @@ def detect_status(card, site_url):
         heading = card.find('h4')
         if heading and heading.get_text(strip=True) and card.find('a', href=True) and card.find('img'):
             return 'available'
-    if host in {'crystalclassics.com', 'www.crystalclassics.com', 'peanutsminerals.com', 'www.peanutsminerals.com'}:
+    if host in {
+        'crystalclassics.com', 'www.crystalclassics.com',
+        'peanutsminerals.com', 'www.peanutsminerals.com',
+        'arkfeldminerals.com', 'www.arkfeldminerals.com',
+    }:
         if PRICE.search(text):
             return 'available'
     return 'unknown'
