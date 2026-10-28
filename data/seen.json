@@ -1008,7 +1008,10 @@
     "https://crystalclassics.com/products/quartz-var-amethyst-24",
     "https://e-rocks.com/item/amm1214300/fluorite",
     "https://e-rocks.com/item/amm1214308/native-lead",
+    "https://e-rocks.com/item/amm1215199/chenowethite",
+    "https://e-rocks.com/item/amm1215241/baiamareite",
     "https://e-rocks.com/item/amm1215283/native-palladium-native-platinum",
+    "https://e-rocks.com/item/amm1215284/rhenium",
     "https://e-rocks.com/item/amm1215310/toyohaite",
     "https://e-rocks.com/item/ath1212179/fluorite",
     "https://e-rocks.com/item/ath1212394/dioptase-calcite",
@@ -1028,8 +1031,10 @@
     "https://e-rocks.com/item/esm1215907/cassiterite-topaz",
     "https://e-rocks.com/item/esm1215910/rhodonite-galena",
     "https://e-rocks.com/item/esm1215913/stibnite",
+    "https://e-rocks.com/item/esm1215916/arsenopyrite-pyrrhotite",
     "https://e-rocks.com/item/esm1215919/galena",
     "https://e-rocks.com/item/esm1215920/stibnite",
+    "https://e-rocks.com/item/esm1215922/fluorite",
     "https://e-rocks.com/item/esm1215931/titanite",
     "https://e-rocks.com/item/gpm1215396/gypsum",
     "https://e-rocks.com/item/jir1215329/cassiterite",
@@ -1891,7 +1896,10 @@
     "https://www.spiriferminerals.com/product,27423,Cerussite,-baryte.html",
     "https://www.spiriferminerals.com/product,27424,Fluorite,-schorl-tourmaline.html",
     "https://www.spiriferminerals.com/product,27425,Calcite-FRANCE.html",
-    "https://www.spiriferminerals.com/product,27426,Mimetite-.html"
+    "https://www.spiriferminerals.com/product,27426,Mimetite-.html",
+    "https://www.spiriferminerals.com/product,27427,Vanadinite,-baryte.html",
+    "https://www.spiriferminerals.com/product,27428,Beryl-var.-goshenite,-tourmaline-TN.html",
+    "https://www.spiriferminerals.com/product,27429,Pyrite-UNUSUAL-TN.html"
   ],
   "first_seen": {
     "https://www.amf7.com/x1009.html": "2026-10-21T23:18:59.315214+00:00",
@@ -3785,6 +3793,14 @@
     "https://e-rocks.com/item/amm1215283/native-palladium-native-platinum": "2026-10-27T23:23:16.444548+00:00",
     "https://e-rocks.com/item/pdm1216449/cobaltoan-dolomite": "2026-10-27T23:23:16.444548+00:00",
     "https://e-rocks.com/item/qri1216852/bournonite": "2026-10-27T23:23:16.444548+00:00",
-    "https://e-rocks.com/item/cpm1214091/calcite": "2026-10-27T23:23:16.444548+00:00"
+    "https://e-rocks.com/item/cpm1214091/calcite": "2026-10-27T23:23:16.444548+00:00",
+    "https://www.spiriferminerals.com/product,27427,Vanadinite,-baryte.html": "2026-10-28T23:25:49.437325+00:00",
+    "https://www.spiriferminerals.com/product,27428,Beryl-var.-goshenite,-tourmaline-TN.html": "2026-10-28T23:25:49.437325+00:00",
+    "https://www.spiriferminerals.com/product,27429,Pyrite-UNUSUAL-TN.html": "2026-10-28T23:25:49.437325+00:00",
+    "https://e-rocks.com/item/amm1215241/baiamareite": "2026-10-28T23:25:49.437325+00:00",
+    "https://e-rocks.com/item/amm1215284/rhenium": "2026-10-28T23:25:49.437325+00:00",
+    "https://e-rocks.com/item/amm1215199/chenowethite": "2026-10-28T23:25:49.437325+00:00",
+    "https://e-rocks.com/item/esm1215922/fluorite": "2026-10-28T23:25:49.437325+00:00",
+    "https://e-rocks.com/item/esm1215916/arsenopyrite-pyrrhotite": "2026-10-28T23:25:49.437325+00:00"
   }
 }
