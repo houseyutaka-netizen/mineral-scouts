@@ -57,3 +57,10 @@ sites:
     url: https://arkfeldminerals.com/collections/all
     selector: 'a[id^="CardLink-"][href*="/products/"]'
     enabled: true
+
+  - name: Quebul Fine Minerals
+    type: quebul
+    listing_type: retail
+    url: https://www.quebulfineminerals.com/en/minerals
+    selector: '.thumb a.smallimg[href*="/minerals/item/"]'
+    enabled: true
