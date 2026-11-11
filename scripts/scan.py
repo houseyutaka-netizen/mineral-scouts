@@ -322,6 +322,9 @@ def retail_pages(site, session, response):
             'a.next.page-numbers[href]'
         )
         link = soup.select_one(selector)
+        if site.get('type') == 'quebul':
+            link = next((a for a in soup.select('a[href*="/minerals/page/"]')
+                         if a.get_text(strip=True) in {'›', '\x9b', '»'}), None)
         if not link:
             return
         next_url = absolute_url(link.get('href'), url)
@@ -333,6 +336,29 @@ def retail_pages(site, session, response):
         time.sleep(1.5)
         response = session.get(next_url, timeout=25)
         response.raise_for_status()
+
+
+def quebul_item(tag, page_url):
+    card = tag.find_parent('div', class_='thumb')
+    if card is None:
+        raise ValueError('Quebul: 商品枠が見つかりません')
+    title = card.select_one('.thumb_title h2')
+    if title is None:
+        raise ValueError('Quebul: 商品名が見つかりません')
+    match = re.search(r"background-image\s*:\s*url\(\s*['\"]?([^'\"\)]+)", tag.get('style', ''), re.I)
+    image = absolute_url(match.group(1).strip(), page_url) if match else ''
+    # 価格は商品枠内の太字USD金額。動画アイコンやカートのリンクは取得しない。
+    price = price_result()
+    for node in card.select('b'):
+        amount = MONEY.search(node.get_text(' ', strip=True))
+        if amount:
+            price = price_result(amount.group().strip(), 'known')
+            break
+    return {
+        'title': title.get_text(' ', strip=True),
+        'url': absolute_url(tag.get('href'), page_url), 'date': '',
+        'image': image, 'availability': detect_status(card, page_url), **price,
+    }
 
 
 def fetch_items(site, session):
@@ -354,6 +380,9 @@ def fetch_items(site, session):
     else:
         for soup, page_url in retail_pages(site, session, response):
             for tag in soup.select(site.get('selector', 'a')):
+                if site.get('type') == 'quebul':
+                    items.append(quebul_item(tag, page_url))
+                    continue
                 url = absolute_url(tag.get('href'), page_url)
                 if not url:
                     continue
